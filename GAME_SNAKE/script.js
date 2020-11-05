@@ -14,13 +14,13 @@ window.onload = function () {
 	
 	
 	/* Fonction qui initialise le canvas, élément html qui permet de dessiner
-	    document         : Représente notre page html
-		createElement    : Nous crée un élément de type canvas
-		body.appendChild : Ajoute le canvas au body de la page html 
-		ctx              : Variable représentant le contexte du canvas, entre autre sa surface
-		getContext("2d") : Indique que nous allons dessiner en 2 dimensions
-		snakee           : Le serpent représentée sous forme d'un tableau de blocks
-		refreshCanvas    : Fonction servant à rafraîchir l'intérieur du canvas
+	    document                   : Représente notre page html
+		createElement('canvas')    : Nous crée un élément de type canvas
+		body.appendChild           : Ajoute le canvas au body de la page html 
+		ctx                        : Variable représentant le contexte du canvas, entre autre sa surface
+		getContext("2d")           : Indique que nous allons dessiner en 2 dimensions
+		snakee                     : Le serpent représentée sous forme d'un tableau de blocks
+		refreshCanvas              : Fonction servant à rafraîchir l'intérieur du canvas
 	
 	 */
 	function init() {
@@ -29,8 +29,10 @@ window.onload = function () {
 		canvas.height = 600;
 		canvas.style.border = "2px solid";
 		document.body.appendChild(canvas);
+		
+		
 		ctx = canvas.getContext("2d");
-		snakee = new Snake([[6, 4], [5, 4], [4, 4]]);
+		snakee = new Snake([[6, 4], [5, 4], [4, 4]], "down");
 		refreshCanvas();
 	}
 	
@@ -69,8 +71,6 @@ window.onload = function () {
 		ctx.fillRect(x, y, blockSize, blockSize);
 	}
 	
-	
-	
 	/* Constructeur de notre snake
 	
 	   At body    : le corps du snake
@@ -87,14 +87,15 @@ window.onload = function () {
 					-> On supprime le dernier élément de la liste
 	
 	*/
-	function Snake(body) {
+	function Snake(body, direction) {
 		
 		this.body = body;
+		this.direction = direction;
 		this.draw = function () {
 			
 			ctx.save();
 			ctx.fillStyle = "#ff0000";
-			for( var i = 0; i < this.body.length; i++) {
+			for ( var i = 0; i < this.body.length; i++) {
 				
 				drawBlock(ctx, this.body[i]);
 			}
@@ -104,14 +105,95 @@ window.onload = function () {
 		this.advance = function () {
 			
 			var nextPosition = this.body[0].slice();
-			nextPosition[0] +=1;
+			switch(this.direction){
+					
+				case "left":
+					 nextPosition[0] -=1;
+					
+					 break;
+					
+			   /* Exemple implémentation du déplacement du serpent vers la gauche
+					
+					[4] [5] [T6]
+		             [T5 5] [T6]
+	              [T4] [T5] [T6]
+             [T3] [T4] [T5]      */
+				
+				case "right":
+					 nextPosition[0] +=1;
+					 
+					 break;
+					
+				case "down":
+					 nextPosition[1] +=1;
+					 break;
+					
+				case "up":
+					 nextPosition[1] -=1;
+					
+					 break;
+					
+				default:	
+					throw("Invalid Direction");
+			}
 			this.body.unshift(nextPosition);
 			this.body.pop();
 			
 		}
+		
+		this.setDirection = function(newDirection) {
+			
+			 var allowedDirections;
+			 switch(this.direction) {
+				   
+				 case "left":
+		          case "right":
+					   allowedDirections = ["up","down"];
+			           break;
+				case "up":
+		         case "down":
+					   allowedDirections = ["left", "right"];
+			           break;
+				default :
+					throw("Invalid Direction");
+			}
+			if (allowedDirections.indexOf(newDirection) > -1) {  // Si newDirection est une direction présente dans le tableau allowedDirections
+				
+				this.direction = newDirection;
+			}
+			
+		}
 	}
 	
+	/* Cette fonction est rattachée à notre page html et détecte un appui de touche du clavier
+	grâce à la variable évènement e. Grâce à cette dernière, on récupère le code de la touche, 
+	de là on déduit la nouvelle direction du Srepent (on set l'attribut direction du Snake à newDirection
+	ssi cette direction est permmise par rapport à la 1ere direction / actuelle direction ).
+	*/
+	document.onkeydown = function handleKeyDown(e) {
 	
+	    var key = e.keyCode;
+		var newDirection;
+		switch(key) {
+
+			case 37:
+				newDirection = "left";
+				break;
+			case 38:
+				newDirection = "up";
+				break;
+			case 39:
+				newDirection = "right";
+				break;
+			case 40:
+				newDirection = "down";
+				break;
+			default:
+				return;
+		}
+		snakee.setDirection(newDirection);
+	
+    }
 	
 } 
 
@@ -124,5 +206,10 @@ this.advance = function () {
 				this.body[i] [0] += 1;
 				//this.body[i] [1] += 1;
 			}
-		}
+		
+		
+		[4] [5] [T6]
+		 [T5 5] [T6]
+	  [T4] [T5] [T6]
+ [T3] [T4] [T5]
 */
