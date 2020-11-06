@@ -9,6 +9,9 @@ window.onload = function () {
 	var ctx;
 	var delay = 100;
 	var snakee;
+	var applee;
+	var widthInBlocks = canvasWidth/blockSize;
+	var heightInBlocks = canvasHeight/blockSize;
 	
 	init();
 	
@@ -25,14 +28,16 @@ window.onload = function () {
 	 */
 	function init() {
 		var canvas = document.createElement('canvas');
-		canvas.width = 600;
+		canvas.width = 900;
 		canvas.height = 600;
 		canvas.style.border = "2px solid";
 		document.body.appendChild(canvas);
 		
 		
+		
 		ctx = canvas.getContext("2d");
 		snakee = new Snake([[6, 4], [5, 4], [4, 4]], "down");
+		applee = new Apple([6,10]);
 		refreshCanvas();
 	}
 	
@@ -47,11 +52,23 @@ window.onload = function () {
 	
 	function refreshCanvas()
 	{
-		ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 		snakee.advance();
-		snakee.draw();
+		if(snakee.checkCollision()){
+			
+			// GAME OVER
+		}
 		
-		setTimeout(refreshCanvas, delay);	
+		else {
+			
+			ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+		
+			snakee.draw();
+			applee.draw();
+
+			setTimeout(refreshCanvas, delay);	
+			
+		}
+		
 	}
 	
 	
@@ -163,7 +180,64 @@ window.onload = function () {
 			}
 			
 		}
+		
+		this.checkCollision = function(){
+			
+			
+			
+			var wallCollision = false;
+			var snakeCollision = false;
+			var head = this.body[0];
+			var rest = this.body.slice(1);
+			var snakeX = head[0];
+			var snakeY = head[1];
+			var minX = 0;
+			var minY = 0;
+			var maxX = widthInBlocks - 1 ;
+			var maxY = heightInBlocks - 1;
+			var isNotBetweenHorizontalWalls = snakeX < minX || snakeX > maxX ;
+			var isNotBetweenVerticalWalls = snakeY < minY || snakeY > maxY;
+			
+			
+			if(isNotBetweenHorizontalWalls || isNotBetweenVerticalWalls)
+			{
+				
+				wallCollision = true;
+			}
+			
+			for (var i =0; i < rest.length; i++){
+				
+				if (snakeX === rest[i][0] && snakeY === rest[i][1])
+				
+				{
+					snakeCollision = true;
+				}
+			}
+			
+			return wallCollision || snakeCollision;
+		};
 	}
+	
+	
+	function Apple(position) {
+		
+		this.position = position;
+		this.draw = function () {
+			
+			ctx.save();
+			ctx.fillStyle = "#33cc33";
+			ctx.beginPath();
+			var radius = blockSize/2;
+			var x = position[0] * blockSize + radius;
+			var y = position[1] * blockSize + radius; 
+			ctx.arc(x, y, radius, 0, Math.PI*2, true);
+			ctx.fill();
+			
+			ctx.restore();
+		};
+	}
+	
+	
 	
 	/* Cette fonction est rattachée à notre page html et détecte un appui de touche du clavier
 	grâce à la variable évènement e. Grâce à cette dernière, on récupère le code de la touche, 
